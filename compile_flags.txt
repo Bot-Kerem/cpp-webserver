@@ -1,0 +1,3 @@
+-Iinclude/OWQL
+-Iinclude
+-std=c++20

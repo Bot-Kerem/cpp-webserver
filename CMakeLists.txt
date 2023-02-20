@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 3.25)
 option(OWQL_TESTS "Enable testing")
 
 project(OWQL)
+find_package(spdlog REQUIRED)
 
 add_library(OWQL
 		src/server.cpp
 	)
 
 target_include_directories(OWQL PUBLIC include PRIVATE include/OWQL)
+target_link_libraries(OWQL PUBLIC spdlog::spdlog)
 
 # tests
 
