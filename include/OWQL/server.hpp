@@ -4,13 +4,13 @@
 #include <string_view>
 #include <sys/socket.h>
 
-#include "char_array.hpp"
+#include "request.hpp"
 
 class ServerBase {
 	private:
 		int m_socket;
 		int check_failed(int, const std::string_view = "") const;
-		CharArray read_message(int client);
+		Request get_request(int client);
 
 		void main_loop();
 	

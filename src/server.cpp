@@ -30,17 +30,11 @@ void ServerBase::main_loop() {
 	spdlog::info("Connection acccepted shutting down the server");
 	is_running = false;
 
-	auto message = read_message(client);
-	for (const auto& line: message.slice('\n')) {
-		std::cout << "LINE: " << line << '\n';
-	}
+	auto request = get_request(client);
 }
 
-CharArray ServerBase::read_message(int client) {
-	CharArray buffer(1024);
-	ssize_t buf_len = check_failed(read(client, buffer.data(), 1024), "Couldn't get server message");
-	buffer.resize(buf_len);
-	return buffer;
+Request ServerBase::get_request(int client) {
+	return {};
 }
 
 ServerBase::ServerBase() {
