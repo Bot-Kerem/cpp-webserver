@@ -5,7 +5,8 @@
 #include <spdlog/spdlog.h>
 
 #include <stdexcept>
-#include <arpa/inet.h>
+#include <unistd.h>
+#include <netinet/in.h>
 
 int ServerBase::exec() {
 	spdlog::info("Started server");
@@ -17,10 +18,12 @@ int ServerBase::exec() {
 
 ServerBase::ServerBase() {
 	// TODO: Make a config struct for creation info
-	auto protocol = OWQL::Protocol::IPv4;
-	auto port = 8972;
+	const auto protocol = OWQL::Protocol::IPv4;
+	const auto port = 8972;
+	const auto backlog = 1000;
 
 	// Create a tcp socket
+	spdlog::info("Creating socket");
 	m_socket = check_failed(socket(protocol, SOCK_STREAM, 0), "Socket couldn't created");
 
 	// assign IP and PORT
@@ -28,6 +31,14 @@ ServerBase::ServerBase() {
 	server_addr.sin_family 			= protocol;
 	server_addr.sin_addr.s_addr	= htonl(INADDR_ANY);
 	server_addr.sin_port				= htons(port);
+
+	// Bind socket
+	spdlog::info("Binding socket at port: {}", port);
+	check_failed(bind(m_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr)), "Binding socket failed");
+
+	// Listen
+	spdlog::info("Server listening with backlog: {}", backlog);
+	listen(m_socket, backlog);
 
 }
 
