@@ -33,7 +33,15 @@ void ServerBase::main_loop() {
 	auto request = get_request(client);
 }
 
+
+[[nodiscard]] std::tuple<std::array<char, 1024>, size_t> ServerBase::read_request(int client) {
+	std::array<char, 1024> request;
+	size_t request_len = read(client, &request, sizeof(request));
+	return {request, request_len};
+}
+
 Request ServerBase::get_request(int client) {
+	auto [buffer, buffer_len] = read_request(client);
 	return {};
 }
 
