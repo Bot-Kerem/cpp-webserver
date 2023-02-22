@@ -1,10 +1,11 @@
 #include "server.hpp"
 #include "enums.hpp"
 
-#include <netinet/in.h>
 #include <spdlog/spdlog.h>
 
+#include <iostream>
 #include <stdexcept>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
 
@@ -12,8 +13,34 @@ int ServerBase::exec() {
 	spdlog::info("Started server");
 	spdlog::info("Building...");
 	build();
+
+	while (is_running) {
+		main_loop();
+	}
+
 	spdlog::info("Program closed with exit code: {}", 0);
 	return 0;
+}
+
+void ServerBase::main_loop() {
+	spdlog::info("Waiting for connections");
+	sockaddr_in cli;
+	socklen_t cli_len = sizeof(cli);
+	int client = accept(m_socket, reinterpret_cast<sockaddr*>(&cli), &cli_len);
+	spdlog::info("Connection acccepted shutting down the server");
+	is_running = false;
+
+	auto message = read_message(client);
+	for (const auto& line: message.slice('\n')) {
+		std::cout << "LINE: " << line << '\n';
+	}
+}
+
+CharArray ServerBase::read_message(int client) {
+	CharArray buffer(1024);
+	ssize_t buf_len = check_failed(read(client, buffer.data(), 1024), "Couldn't get server message");
+	buffer.resize(buf_len);
+	return buffer;
 }
 
 ServerBase::ServerBase() {
@@ -26,7 +53,7 @@ ServerBase::ServerBase() {
 	spdlog::info("Creating socket");
 	m_socket = check_failed(socket(protocol, SOCK_STREAM, 0), "Socket couldn't created");
 
-	// assign IP and PORT
+	// Assign IP and PORT
 	sockaddr_in server_addr;
 	server_addr.sin_family 			= protocol;
 	server_addr.sin_addr.s_addr	= htonl(INADDR_ANY);
@@ -39,7 +66,6 @@ ServerBase::ServerBase() {
 	// Listen
 	spdlog::info("Server listening with backlog: {}", backlog);
 	listen(m_socket, backlog);
-
 }
 
 ServerBase::~ServerBase() {
