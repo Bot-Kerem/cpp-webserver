@@ -1,6 +1,8 @@
 #include "server.hpp"
 #include "enums.hpp"
 
+#include <http_parser/parser.hpp>
+
 #include <spdlog/spdlog.h>
 
 #include <iostream>
@@ -9,7 +11,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
-int ServerBase::exec() {
+int OWQL::ServerBase::exec() {
 	spdlog::info("Started server");
 	spdlog::info("Building...");
 	build();
@@ -22,7 +24,7 @@ int ServerBase::exec() {
 	return 0;
 }
 
-void ServerBase::main_loop() {
+void OWQL::ServerBase::main_loop() {
 	spdlog::info("Waiting for connections");
 	sockaddr_in cli;
 	socklen_t cli_len = sizeof(cli);
@@ -30,25 +32,15 @@ void ServerBase::main_loop() {
 	spdlog::info("Connection acccepted shutting down the server");
 	is_running = false;
 
-	auto request = get_request(client);
+	char buffer[1024];
+	size_t buf_len = read(client, buffer, 1024);
+	auto request = HttpParser::parse({buffer, buf_len});
+	spdlog::info("Target: {}", request.target);
 }
 
-
-[[nodiscard]] std::tuple<std::array<char, 1024>, size_t> ServerBase::read_request(int client) {
-	std::array<char, 1024> request;
-	size_t request_len = read(client, &request, sizeof(request));
-	return {request, request_len};
-}
-
-Request ServerBase::get_request(int client) {
-	auto [buffer, buffer_len] = read_request(client);
-	return {};
-}
-
-ServerBase::ServerBase() {
+OWQL::ServerBase::ServerBase(uint16_t port) {
 	// TODO: Make a config struct for creation info
 	const auto protocol = OWQL::Protocol::IPv4;
-	const auto port = 8972;
 	const auto backlog = 1000;
 
 	// Create a tcp socket
@@ -70,11 +62,11 @@ ServerBase::ServerBase() {
 	listen(m_socket, backlog);
 }
 
-ServerBase::~ServerBase() {
+OWQL::ServerBase::~ServerBase() {
 	close(m_socket);
 }
 
-int ServerBase::check_failed(int proc, const std::string_view msg) const {
+int OWQL::ServerBase::check_failed(int proc, const std::string_view msg) const {
 	if (proc < 0) {
 		throw std::runtime_error(msg.data());
 	}

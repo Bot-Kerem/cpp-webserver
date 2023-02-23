@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 
+add_subdirectory(modules/http_parser)
+
 option(OWQL_TESTS "Enable testing")
 
 project(OWQL)
+
 find_package(spdlog REQUIRED)
 
 add_library(OWQL
@@ -10,7 +13,7 @@ add_library(OWQL
 	)
 
 target_include_directories(OWQL PUBLIC include PRIVATE include/OWQL)
-target_link_libraries(OWQL PUBLIC spdlog::spdlog)
+target_link_libraries(OWQL PUBLIC spdlog::spdlog http_parser)
 
 # tests
 

@@ -14,17 +14,6 @@ namespace OWQL {
 		Local = AF_UNIX, // same as AF_LOCAL
 	};
 
-	enum class RequestType {
-		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
-			GET
-		,	HEAD
-		,	POST
-		,	PUT
-		,	DELETE
-		,	CONNECT
-		,	OPTIONS
-		,	TRACE
-	};
 };
 
 

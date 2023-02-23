@@ -1,3 +1,5 @@
 -Iinclude/OWQL
 -Iinclude
+-Imodules/http_parser/include
+-Imodules/http_parser/include/http_parser
 -std=c++20

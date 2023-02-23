@@ -3,18 +3,12 @@
 
 #include <string_view>
 #include <sys/socket.h>
-#include <tuple>
-#include <array>
-
-#include "request.hpp"
 
 namespace OWQL {
 	class ServerBase {
 		private:
 			int m_socket;
 			int check_failed(int, const std::string_view = "") const;
-			Request get_request(int client);
-			std::tuple<std::array<char, 1024>, size_t> read_request(int client);
 
 			void main_loop();
 	
@@ -23,7 +17,7 @@ namespace OWQL {
 		public:
 			int exec();
 
-			ServerBase();
+			ServerBase(uint16_t port=8972);
 			~ServerBase();
 
 			virtual void build() {  }
