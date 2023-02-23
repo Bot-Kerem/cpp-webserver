@@ -14,6 +14,7 @@
 int OWQL::ServerBase::exec() {
 	spdlog::info("Started server");
 	spdlog::info("Building...");
+	spdlog::set_level(spdlog::level::level_enum::trace);
 	build();
 
 	while (is_running) {
@@ -36,6 +37,9 @@ void OWQL::ServerBase::main_loop() {
 	size_t buf_len = read(client, buffer, 1024);
 	auto request = HttpParser::parse({buffer, buf_len});
 	spdlog::info("Target: {}", request.target);
+	for (const auto& [header, content]: request.headers) {
+		spdlog::debug("{}: {}", header, content);
+	}
 }
 
 OWQL::ServerBase::ServerBase(uint16_t port) {

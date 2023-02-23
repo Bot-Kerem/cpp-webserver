@@ -1,5 +1,6 @@
 #include "parser.hpp"
 #include <iostream>
+#include <stdexcept>
 
 using namespace HttpParser;
 
@@ -24,6 +25,11 @@ static const std::map<std::string, ProtocolVersion> protocol_versions {{
 
 HttpRequest HttpParser::parse(std::string_view str) {
 	HttpRequest request;
+	if (str.starts_with("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) {
+		request.version = ProtocolVersion::HTTP_2_0;
+		return request;
+	}
+
 	int i = 0;
 	int num_space = 0;
 	std::string temp_str;
@@ -37,22 +43,39 @@ HttpRequest HttpParser::parse(std::string_view str) {
 			}
 			num_space++;
 			temp_str.clear();
-			continue;
 		}
 		else if (str[i] == '\n') {
-			if (temp_str.back() == ' ') {
-				temp_str.pop_back();
-			}
+			temp_str.erase(temp_str.find_last_not_of(' '));
 			request.version = protocol_versions.at(temp_str);
 			temp_str.clear();
 			i++;
 			break;
+		} else {
+			temp_str.push_back(str[i]);
 		}
-		temp_str.push_back(str[i]);
 	}
 
-	//for (; i < str.length(); i++) {
-	//}
+	std::string header;
+	// parse headers
+	for (; i < str.length(); i++) {
+		if (str[i] == '\n') {
+			if (str[i+1] == '\n' || str[i+1] == '\0') {
+				i+=2;
+				break;
+			}
+			request.headers.insert({header, temp_str});
+
+			temp_str.clear();
+			header.clear();
+		} else if (str[i] == ':' && header.empty()) {
+			i += 1;
+			header = temp_str;
+			temp_str.clear();
+		} else {
+			temp_str.push_back(str[i]);
+		}
+	}
+
 	return request;
 }
 
