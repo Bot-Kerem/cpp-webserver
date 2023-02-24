@@ -1,5 +1,4 @@
 #include "parser.hpp"
-#include <iostream>
 #include <stdexcept>
 
 using namespace HttpParser;
@@ -37,7 +36,6 @@ HttpRequest HttpParser::parse(std::string_view str) {
 		if (str[i] == ' ') {
 			if (num_space == 0) {
 				request.method = methods.at(temp_str);
-
 			} else if (num_space == 1) {
 				request.target = temp_str;
 			}
@@ -45,7 +43,7 @@ HttpRequest HttpParser::parse(std::string_view str) {
 			temp_str.clear();
 		}
 		else if (str[i] == '\n') {
-			temp_str.erase(temp_str.find_last_not_of(' '));
+			temp_str.erase(temp_str.find_last_not_of(' ') + 1);
 			request.version = protocol_versions.at(temp_str);
 			temp_str.clear();
 			i++;
@@ -59,20 +57,22 @@ HttpRequest HttpParser::parse(std::string_view str) {
 	// parse headers
 	for (; i < str.length(); i++) {
 		if (str[i] == '\n') {
-			if (str[i+1] == '\n' || str[i+1] == '\0') {
-				i+=2;
-				break;
-			}
 			request.headers.insert({header, temp_str});
 
 			temp_str.clear();
 			header.clear();
+			if (str[i+1] == '\n' || str[i+1] == '\0') {
+				i+=2;
+				break;
+			}
 		} else if (str[i] == ':' && header.empty()) {
 			i += 1;
 			header = temp_str;
 			temp_str.clear();
 		} else {
 			temp_str.push_back(str[i]);
+		}
+		if (!temp_str.empty()) {
 		}
 	}
 
