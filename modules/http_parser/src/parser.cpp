@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include <iostream>
 #include <stdexcept>
 
 using namespace HttpParser;
@@ -43,8 +44,13 @@ HttpRequest HttpParser::parse(std::string_view str) {
 			temp_str.clear();
 		}
 		else if (str[i] == '\n') {
-			temp_str.erase(temp_str.find_last_not_of(' ') + 1);
+			temp_str.erase(temp_str.find_last_not_of((char)(13)) + 1);
+			std::cout << "WORKING\n";
+			std::cout << "STR: " << temp_str << '\n';
+			std::cout << "LEN: " << temp_str.length() << '\n';
+			std::cout << (int)(temp_str.back()) << '\n';
 			request.version = protocol_versions.at(temp_str);
+			std::cout << "WORKING\n";
 			temp_str.clear();
 			i++;
 			break;
