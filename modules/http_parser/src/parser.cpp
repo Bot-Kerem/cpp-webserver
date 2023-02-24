@@ -29,6 +29,7 @@ HttpRequest HttpParser::parse(std::string_view str) {
 		request.version = ProtocolVersion::HTTP_2_0;
 		return request;
 	}
+	std::cout << str << '\n';
 
 	int i = 0;
 	int num_space = 0;
@@ -44,13 +45,8 @@ HttpRequest HttpParser::parse(std::string_view str) {
 			temp_str.clear();
 		}
 		else if (str[i] == '\n') {
-			temp_str.erase(temp_str.find_last_not_of((char)(13)) + 1);
-			std::cout << "WORKING\n";
-			std::cout << "STR: " << temp_str << '\n';
-			std::cout << "LEN: " << temp_str.length() << '\n';
-			std::cout << (int)(temp_str.back()) << '\n';
+			temp_str.erase(temp_str.find_last_not_of('\r') + 1);
 			request.version = protocol_versions.at(temp_str);
-			std::cout << "WORKING\n";
 			temp_str.clear();
 			i++;
 			break;
@@ -67,8 +63,8 @@ HttpRequest HttpParser::parse(std::string_view str) {
 
 			temp_str.clear();
 			header.clear();
-			if (str[i+1] == '\n' || str[i+1] == '\0') {
-				i+=2;
+			if (str[i+1] == '\r' || str[i+1] == '\0') {
+				i+=3;
 				break;
 			}
 		} else if (str[i] == ':' && header.empty()) {
@@ -78,8 +74,11 @@ HttpRequest HttpParser::parse(std::string_view str) {
 		} else {
 			temp_str.push_back(str[i]);
 		}
-		if (!temp_str.empty()) {
-		}
+	}
+
+	if (i < str.length()) {
+		temp_str.append(&str[i], str.length() - i);
+		request.content = temp_str;
 	}
 
 	return request;

@@ -40,6 +40,7 @@ void OWQL::ServerBase::main_loop() {
 	for (const auto& [header, content]: request.headers) {
 		spdlog::debug("{}: {}", header, content);
 	}
+	spdlog::debug("Content: {}", request.content);
 }
 
 OWQL::ServerBase::ServerBase(uint16_t port) {
