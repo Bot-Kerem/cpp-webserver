@@ -15,6 +15,7 @@ namespace HttpParser {
 			std::string target;
 			std::map<std::string, std::string> headers;
 			std::string content;
+			int client;
 	};
 
 	HttpRequest parse(std::string_view str);

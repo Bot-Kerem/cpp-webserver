@@ -33,38 +33,42 @@ void OWQL::ServerBase::main_loop() {
 	spdlog::info("Connection acccepted shutting down the server");
 	is_running = false;
 
+	size_t buf_len;
 	char buffer[1024];
-	size_t buf_len = read(client, buffer, 1024);
-	auto request = HttpParser::parse({buffer, buf_len});
-	spdlog::info("Target: {}", request.target);
-	for (const auto& [header, content]: request.headers) {
-		spdlog::debug("{}: {}", header, content);
+	std::string request_str;
+	while ((buf_len = read(client, buffer, 1024))) {
+		spdlog::info("Reading {} bytes", buf_len);
+		request_str.append(buffer, buf_len);
+		if (buf_len < sizeof(buffer)) {
+			break;
+		}
 	}
-	spdlog::debug("Content: {}", request.content);
+
+	auto request = HttpParser::parse(request_str);
+	request.client = client;
+	handle_request(request);
 }
 
-OWQL::ServerBase::ServerBase(uint16_t port) {
+OWQL::ServerBase::ServerBase(Config config) {
 	// TODO: Make a config struct for creation info
-	const auto protocol = OWQL::Protocol::IPv4;
-	const auto backlog = 1000;
 
 	// Create a tcp socket
 	spdlog::info("Creating socket");
-	m_socket = check_failed(socket(protocol, SOCK_STREAM, 0), "Socket couldn't created");
+	m_socket = check_failed(socket(config.protocol, SOCK_STREAM, 0), "Socket couldn't created");
 
 	// Assign IP and PORT
 	sockaddr_in server_addr;
-	server_addr.sin_family 			= protocol;
+	server_addr.sin_family 			= config.protocol;
 	server_addr.sin_addr.s_addr	= htonl(INADDR_ANY);
-	server_addr.sin_port				= htons(port);
+	server_addr.sin_port				= htons(config.port);
 
 	// Bind socket
-	spdlog::info("Binding socket at port: {}", port);
+	spdlog::info("Binding socket at port: {}", config.port);
 	check_failed(bind(m_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr)), "Binding socket failed");
 
 	// Listen
-	spdlog::info("Server listening with backlog: {}", backlog);
-	listen(m_socket, backlog);
+	spdlog::info("Server listening with backlog: {}", config.backlog);
+	listen(m_socket, config.backlog);
 }
 
 OWQL::ServerBase::~ServerBase() {

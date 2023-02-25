@@ -1,5 +1,5 @@
 #include "parser.hpp"
-#include <iostream>
+#include <cstdlib>
 #include <stdexcept>
 
 using namespace HttpParser;
@@ -29,7 +29,6 @@ HttpRequest HttpParser::parse(std::string_view str) {
 		request.version = ProtocolVersion::HTTP_2_0;
 		return request;
 	}
-	std::cout << str << '\n';
 
 	int i = 0;
 	int num_space = 0;
@@ -54,7 +53,6 @@ HttpRequest HttpParser::parse(std::string_view str) {
 			temp_str.push_back(str[i]);
 		}
 	}
-
 	std::string header;
 	// parse headers
 	for (; i < str.length(); i++) {
@@ -63,7 +61,7 @@ HttpRequest HttpParser::parse(std::string_view str) {
 
 			temp_str.clear();
 			header.clear();
-			if (str[i+1] == '\r' || str[i+1] == '\0') {
+			if (str[i+1] == '\r' || str[i+1] == '\n') {
 				i+=3;
 				break;
 			}
@@ -76,9 +74,9 @@ HttpRequest HttpParser::parse(std::string_view str) {
 		}
 	}
 
-	if (i < str.length()) {
-		temp_str.append(&str[i], str.length() - i);
-		request.content = temp_str;
+	if (request.headers.contains("Content-Length")) {
+		size_t len = atoi(request.headers.at("Content-Length").c_str());
+		request.content = str.substr(str.length() - len , len);
 	}
 
 	return request;
